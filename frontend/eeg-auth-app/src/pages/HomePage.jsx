@@ -423,7 +423,7 @@ const HomePage = () => {
               <span className="text-lg font-bold gradient-text">MindKey</span>
             </div>
             <p className="text-white/60 text-sm">
-              © {new Date().getFullYear()} MindKey. All rights reserved.
+              © 2025 MindKey. All rights reserved.
             </p>
             <div className="flex gap-6 text-sm text-white/60">
               <a href="#" className="hover:text-violet-500 transition-colors">Privacy</a>
