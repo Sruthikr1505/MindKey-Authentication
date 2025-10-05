@@ -67,3 +67,5 @@ Thumbs.db
 
 # Docker
 *.log
+data/user_prototypes/
+outputs/
