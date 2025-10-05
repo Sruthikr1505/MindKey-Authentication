@@ -33,16 +33,17 @@ ENV/
 *~
 
 # Data
-data/processed/
 data/raw/*.dat
 data/raw/*.bdf
-*.npy
+# Keep processed data and models for deployment
+# data/processed/
+# *.npy
 *.npz
 
 # Models & outputs
 checkpoints/
-models/
-outputs/
+# models/  # Keep models for deployment
+outputs/explanations/
 logs/
 wandb/
 
