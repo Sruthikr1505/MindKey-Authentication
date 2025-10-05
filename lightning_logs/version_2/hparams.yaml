@@ -1,0 +1,8 @@
+embedding_size: 128
+hidden_size: 128
+lr: 0.001
+n_channels: 48
+num_classes: 10
+num_layers: 2
+use_attention: true
+weight_decay: 0.0001

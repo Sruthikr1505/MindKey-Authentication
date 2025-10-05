@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  # Backend API
+  backend:
+    build:
+      context: ..
+      dockerfile: deployments/Dockerfile
+    container_name: eeg_auth_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../models:/app/models
+      - ../data:/app/data
+      - ../outputs:/app/outputs
+      - ../src:/app/src
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PYTHONPATH=/app/src
+    restart: unless-stopped
+    networks:
+      - eeg_auth_network
+
+  # Optional: PostgreSQL database (commented out - using SQLite by default)
+  # db:
+  #   image: postgres:15-alpine
+  #   container_name: eeg_auth_db
+  #   environment:
+  #     POSTGRES_USER: eeg_auth
+  #     POSTGRES_PASSWORD: secure_password
+  #     POSTGRES_DB: eeg_auth_db
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+  #   networks:
+  #     - eeg_auth_network
+
+  # Optional: Frontend (nginx serving React build)
+  # frontend:
+  #   image: nginx:alpine
+  #   container_name: eeg_auth_frontend
+  #   ports:
+  #     - "3000:80"
+  #   volumes:
+  #     - ../frontend/eeg-auth-app/dist:/usr/share/nginx/html
+  #     - ./nginx.conf:/etc/nginx/conf.d/default.conf
+  #   depends_on:
+  #     - backend
+  #   networks:
+  #     - eeg_auth_network
+
+networks:
+  eeg_auth_network:
+    driver: bridge
+
+# volumes:
+#   postgres_data:
