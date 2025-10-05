@@ -11,12 +11,48 @@ venv/
 .ipynb_checkpoints
 *.db
 *.sqlite3
+
+# Model files (keep only essential ones)
 *.h5
-*.pth
-*.pt
-*.bin
-*.ckpt
+models/*.pth
+models/*.ckpt
+!models/essential_model.pt  # Keep this specific file
+
+# Data files
 .DS_Store
 data/raw/
+data/processed/
 checkpoints/
+
+# Node/React
 node_modules/
+frontend/eeg-auth-app/node_modules/
+
+# Build directories
+build/
+dist/
+*.egg-info/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+logs/
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
