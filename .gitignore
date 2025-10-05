@@ -1,71 +1,22 @@
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
 *.so
 .Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Virtual environments
-venv/
 env/
-ENV/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# Data
-data/raw/*.dat
-data/raw/*.bdf
-# Keep processed data and models for deployment
-# data/processed/
-# *.npy
-*.npz
-
-# Models & outputs
-checkpoints/
-# models/  # Keep models for deployment
-outputs/explanations/
-logs/
-wandb/
-
-# Database
+venv/
+.venv/
+.mypy_cache/
+.pytest_cache/
+.ipynb_checkpoints
 *.db
-*.sqlite
 *.sqlite3
-
-# Secrets
-.env
-.kaggle/
-kaggle.json
-
-# OS
+*.h5
+*.pth
+*.pt
+*.bin
+*.ckpt
 .DS_Store
-Thumbs.db
-
-# Jupyter
-.ipynb_checkpoints/
-*.ipynb
-
-# Docker
-*.log
-data/user_prototypes/
-outputs/
+data/raw/
+checkpoints/
+node_modules/

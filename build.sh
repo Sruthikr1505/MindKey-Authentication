@@ -1,16 +1,22 @@
 #!/bin/bash
 
-# Install Git LFS
-curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
-sudo apt-get install -y git-lfs
-git lfs install
-git lfs pull
+# Set Python version
+export PYTHON_VERSION=3.9.16
 
-# Install Python dependencies
+# Update pip and install Python dependencies
+python -m pip install --upgrade pip
 pip install -r requirements.txt
+pip install gunicorn uvicorn[standard]
 
 # Build frontend
 cd frontend/eeg-auth-app
 npm install
 npm run build
 cd ../..
+
+# Create necessary directories
+mkdir -p static
+mkdir -p models
+
+# Set permissions
+chmod +x /opt/render/project/src/.venv/bin/*
