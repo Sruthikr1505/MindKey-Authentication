@@ -30,10 +30,10 @@ cp -r frontend/eeg-auth-app/dist/* static/
 chmod -R 755 static
 chmod -R 755 models
 
-# Create a minimal essential model if it doesn't exist
-if [ ! -f "models/essential_model.pt" ]; then
-    echo "No essential model found. Creating a minimal one..."
-    python -c "import torch; torch.save({'dummy': True}, 'models/essential_model.pt')
+# Verify model files exist
+if [ ! -f "models/encoder.pth" ] || [ ! -f "models/spoof_model.pth" ]; then
+    echo "Error: Required model files are missing!"
+    exit 1
 fi
 
-echo "Build completed successfully!"
+echo "✅ Build completed successfully!"

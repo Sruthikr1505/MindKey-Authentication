@@ -49,13 +49,23 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 # Serve static files
-static_dir = Path("frontend/eeg-auth-app/dist")
-if not static_dir.exists():
-    logger.warning(f"Static files directory not found at {static_dir}")
-    static_dir = Path("static")
-    static_dir.mkdir(exist_ok=True)
+static_dirs = [
+    Path("frontend/eeg-auth-app/dist"),  # Development build
+    Path("static"),  # Production build
+    Path("frontend/eeg-auth-app/public")  # Fallback
+]
 
-app.mount("/static", StaticFiles(directory=static_dir), name="static")
+static_dir = None
+for dir_path in static_dirs:
+    if dir_path.exists():
+        static_dir = dir_path
+        logger.info(f"Using static files from: {static_dir}")
+        break
+
+if static_dir:
+    app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+else:
+    logger.error("No static files directory found! Frontend will not be served.")
 
 # Serve the main page for any route that doesn't match API routes
 @app.get("/{full_path:path}")

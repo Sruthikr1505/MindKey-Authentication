@@ -12,11 +12,17 @@ venv/
 *.db
 *.sqlite3
 
-# Model files (keep only essential ones)
+# Model files - include all essential model files
+!models/calibrator.pkl
+!models/config.json
+!models/encoder.pth
+!models/prototypes.npz
+!models/spoof_model.pth
+!models/spoof_threshold.npy
+
+# Exclude other large files
 *.h5
-models/*.pth
-models/*.ckpt
-!models/essential_model.pt  # Keep this specific file
+*.ckpt
 
 # Data files
 .DS_Store
