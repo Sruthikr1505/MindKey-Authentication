@@ -29,6 +29,7 @@ venv/
 data/raw/
 data/processed/
 checkpoints/
+checkpoints_enhanced/
 
 # Node/React
 node_modules/
@@ -47,6 +48,7 @@ dist/
 # Logs
 *.log
 logs/
+lightning_logs/
 
 # IDE specific files
 .idea/
