@@ -104,9 +104,17 @@ def warmup_training(
         mode='min'
     )
     
+    # Set accelerator based on device
+    if device == 'cuda':
+        accelerator = 'gpu'
+    elif device == 'mps':
+        accelerator = 'mps'
+    else:
+        accelerator = 'cpu'
+    
     trainer = pl.Trainer(
         max_epochs=epochs,
-        accelerator='gpu' if device == 'cuda' else 'cpu',
+        accelerator=accelerator,
         devices=1,
         callbacks=[checkpoint_callback, early_stop_callback],
         enable_progress_bar=True,
@@ -166,9 +174,17 @@ def metric_training(
         save_top_k=1
     )
     
+    # Set accelerator based on device
+    if device == 'cuda':
+        accelerator = 'gpu'
+    elif device == 'mps':
+        accelerator = 'mps'
+    else:
+        accelerator = 'cpu'
+    
     trainer = pl.Trainer(
         max_epochs=epochs,
-        accelerator='gpu' if device == 'cuda' else 'cpu',
+        accelerator=accelerator,
         devices=1,
         callbacks=[checkpoint_callback],
         enable_progress_bar=True,
@@ -196,11 +212,18 @@ def main():
     parser.add_argument('--metric_epochs', type=int, default=50, help='Metric learning epochs (increased)')
     parser.add_argument('--lr', type=float, default=5e-4, help='Learning rate (reduced for stability)')
     parser.add_argument('--metric_loss', type=str, default='proxyanchor', choices=['proxyanchor', 'triplet'])
-    parser.add_argument('--device', type=str, default='cpu', help='Device (cpu or cuda)')
+    parser.add_argument('--device', type=str, default='cpu', help='Device (cpu, cuda, or mps)')
     parser.add_argument('--seed', type=int, default=42, help='Random seed')
     parser.add_argument('--k_prototypes', type=int, default=5, help='Number of prototypes per user (increased)')
     
     args = parser.parse_args()
+    
+    # Auto-detect MPS (Apple Silicon GPU) if not specified
+    if args.device == 'cpu':
+        import torch
+        if torch.backends.mps.is_available():
+            args.device = 'mps'
+            print("✓ Apple Silicon GPU (MPS) detected - using GPU acceleration")
     
     # Set seeds
     pl.seed_everything(args.seed)
