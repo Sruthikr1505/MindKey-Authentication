@@ -4,7 +4,7 @@ Improvements:
 - Deeper LSTM (3 layers)
 - Larger embeddings (256-dim)
 - More prototypes (k=5)
-- Extended training (50 metric epochs)
+- Extended training (30 metric epochs)
 - Better augmentation
 - Ensemble-ready architecture
 """
