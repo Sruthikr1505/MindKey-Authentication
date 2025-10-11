@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { FaBrain, FaLock, FaChartLine, FaShieldAlt, FaBolt } from 'react-icons/fa'
+import { FaBrain, FaLock, FaChartLine, FaShieldAlt, FaBolt, FaUpload, FaCheckCircle } from 'react-icons/fa'
 import DecryptedText from '../components/DecryptedText'
 import SplashScreen from '../components/SplashScreen'
 import ScrollReveal from '../components/ScrollReveal'
@@ -182,14 +182,16 @@ const HomePage = () => {
 
       {/* Features Section */}
       <section className="py-20 px-6">
-        <ScrollReveal>
-          <h2 className="text-5xl md:text-6xl font-black text-white text-center mb-4 tracking-tight">
-            Revolutionary Technology
-          </h2>
-          <p className="text-center text-white/70 mb-16 text-lg">
-            Powered by cutting-edge AI and neuroscience
-          </p>
-        </ScrollReveal>
+        <div className="overflow-hidden">
+          <ScrollReveal>
+            <h2 className="text-5xl md:text-6xl font-black text-white text-center mb-4 tracking-tight">
+              Revolutionary Technology
+            </h2>
+            <p className="text-center text-white/70 mb-16 text-lg">
+              Powered by cutting-edge AI and neuroscience
+            </p>
+          </ScrollReveal>
+        </div>
 
         <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((feature, index) => (
@@ -216,14 +218,16 @@ const HomePage = () => {
       {/* Stats Section - Always Visible */}
       <section className="relative py-32 px-6">
         <div className="max-w-7xl mx-auto">
-          <ScrollReveal>
-            <h2 className="text-5xl md:text-6xl font-black text-white text-center mb-4 tracking-tight">
-              Performance Metrics
-            </h2>
-            <p className="text-center text-white/70 mb-16 text-lg">
-              Industry-leading accuracy and speed
-            </p>
-          </ScrollReveal>
+          <div className="overflow-hidden">
+            <ScrollReveal>
+              <h2 className="text-5xl md:text-6xl font-black text-white text-center mb-4 tracking-tight">
+                Performance Metrics
+              </h2>
+              <p className="text-center text-white/70 mb-16 text-lg">
+                Industry-leading accuracy and speed
+              </p>
+            </ScrollReveal>
+          </div>
           
           <div className="grid md:grid-cols-3 gap-8">
             <ScrollReveal>
@@ -270,6 +274,117 @@ const HomePage = () => {
           </div>
         </div>
       </section>
+      {/* How It Works Section */}
+      <section className="relative py-32 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="overflow-hidden">
+            <ScrollReveal>
+              <h2 className="text-5xl md:text-6xl font-black text-white text-center mb-4 tracking-tight">
+                How It Works
+              </h2>
+              <p className="text-center text-white/70 mb-16 text-lg">
+                Three simple steps to secure authentication
+              </p>
+            </ScrollReveal>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8 relative">
+            {/* Connecting Lines */}
+            <div className="hidden md:block absolute top-1/2 left-0 right-0 h-0.5 bg-gradient-to-r from-violet-600/0 via-violet-600/50 to-violet-600/0 transform -translate-y-1/2" style={{ zIndex: 0 }} />
+            
+            {/* Step 1: Register */}
+            <ScrollReveal delay={0.1}>
+              <motion.div
+                whileHover={{ y: -10, scale: 1.02 }}
+                className="relative glass p-8 rounded-2xl border border-violet-500/20 hover:border-violet-500/40 transition-all"
+                style={{ zIndex: 1 }}
+              >
+                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
+                  <div className="w-12 h-12 bg-gradient-to-br from-violet-600 to-purple-600 rounded-full flex items-center justify-center text-xl font-bold shadow-lg">
+                    1
+                  </div>
+                </div>
+                
+                <div className="mt-8 text-center">
+                  <motion.div
+                    className="w-20 h-20 bg-violet-600/20 rounded-full flex items-center justify-center mx-auto mb-6"
+                    whileHover={{ rotate: 360 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <FaUpload className="w-10 h-10 text-violet-400" />
+                  </motion.div>
+                  
+                  <h3 className="text-2xl font-bold text-white mb-4">Register Your Brain</h3>
+                  <p className="text-white/70 leading-relaxed">
+                    Upload your EEG data to create your unique brain fingerprint
+                  </p>
+                </div>
+              </motion.div>
+            </ScrollReveal>
+
+            {/* Step 2: Process */}
+            <ScrollReveal delay={0.2}>
+              <motion.div
+                whileHover={{ y: -10, scale: 1.02 }}
+                className="relative glass p-8 rounded-2xl border border-violet-500/20 hover:border-violet-500/40 transition-all"
+                style={{ zIndex: 1 }}
+              >
+                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
+                  <div className="w-12 h-12 bg-gradient-to-br from-violet-600 to-purple-600 rounded-full flex items-center justify-center text-xl font-bold shadow-lg">
+                    2
+                  </div>
+                </div>
+                
+                <div className="mt-8 text-center">
+                  <motion.div
+                    className="w-20 h-20 bg-violet-600/20 rounded-full flex items-center justify-center mx-auto mb-6"
+                    whileHover={{ rotate: 360 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <FaBrain className="w-10 h-10 text-violet-400" />
+                  </motion.div>
+                  
+                  <h3 className="text-2xl font-bold text-white mb-4">AI Processing</h3>
+                  <p className="text-white/70 leading-relaxed">
+                    Deep learning analyzes your brainwave patterns with 98% accuracy
+                  </p>
+                </div>
+              </motion.div>
+            </ScrollReveal>
+
+            {/* Step 3: Authenticate */}
+            <ScrollReveal delay={0.3}>
+              <motion.div
+                whileHover={{ y: -10, scale: 1.02 }}
+                className="relative glass p-8 rounded-2xl border border-violet-500/20 hover:border-violet-500/40 transition-all"
+                style={{ zIndex: 1 }}
+              >
+                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
+                  <div className="w-12 h-12 bg-gradient-to-br from-violet-600 to-purple-600 rounded-full flex items-center justify-center text-xl font-bold shadow-lg">
+                    3
+                  </div>
+                </div>
+                
+                <div className="mt-8 text-center">
+                  <motion.div
+                    className="w-20 h-20 bg-violet-600/20 rounded-full flex items-center justify-center mx-auto mb-6"
+                    whileHover={{ rotate: 360 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <FaCheckCircle className="w-10 h-10 text-violet-400" />
+                  </motion.div>
+                  
+                  <h3 className="text-2xl font-bold text-white mb-4">Instant Verification</h3>
+                  <p className="text-white/70 leading-relaxed">
+                    Get authenticated in under 50ms with advanced spoof detection
+                  </p>
+                </div>
+              </motion.div>
+            </ScrollReveal>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section - Always Visible */}
       <section className="relative py-32 px-6">
         <div className="max-w-4xl mx-auto text-center">
