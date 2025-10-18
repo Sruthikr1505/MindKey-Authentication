@@ -14,21 +14,21 @@
 This project implements a **complete, production-ready** biometric authentication system using EEG signals:
 
 ### **Core Features**
-- ✅ **Preprocessing**: Bandpass filtering, ICA artifact removal, downsampling, normalization
-- ✅ **Model**: Bidirectional LSTM encoder with temporal attention mechanism
-- ✅ **Training**: Warmup classification + metric learning (ProxyAnchor loss)
-- ✅ **Authentication**: Per-user prototypes with cosine similarity scoring
-- ✅ **Spoof Detection**: Embedding autoencoder for presentation attack detection
-- ✅ **Calibration**: Platt scaling for probability calibration
-- ✅ **Explainability**: Captum-based attribution (Integrated Gradients, GradientShap)
+- **Preprocessing**: Bandpass filtering, ICA artifact removal, downsampling, normalization
+- **Model**: Bidirectional LSTM encoder with temporal attention mechanism
+- **Training**: Warmup classification + metric learning (ProxyAnchor loss)
+- **Authentication**: Per-user prototypes with cosine similarity scoring
+- **Spoof Detection**: Embedding autoencoder for presentation attack detection
+- **Calibration**: Platt scaling for probability calibration
+- **Explainability**: Captum-based attribution (Integrated Gradients, GradientShap)
 
 ### **Production Features** 🚀
-- ✅ **Modern Web UI**: Beautiful React frontend with particle effects and gradients
-- ✅ **Security**: Rate limiting, input validation, SQL injection prevention, XSS protection
-- ✅ **Authentication Logging**: Complete audit trail of all enrollments and authentications
-- ✅ **Password Security**: Bcrypt hashing with strong password policy
-- ✅ **API Documentation**: Interactive Swagger UI and ReDoc
-- ✅ **Deployment**: FastAPI backend + React frontend + Docker support
+- **Modern Web UI**: Beautiful React frontend with particle effects and gradients
+- **Security**: Rate limiting, input validation, SQL injection prevention, XSS protection
+- **Authentication Logging**: Complete audit trail of all enrollments and authentications
+- **Password Security**: Bcrypt hashing with strong password policy
+- **API Documentation**: Interactive Swagger UI and ReDoc
+- **Deployment**: FastAPI backend + React frontend + Docker support
 
 ## 📊 Architecture
 
