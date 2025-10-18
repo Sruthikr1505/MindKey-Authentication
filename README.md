@@ -11,7 +11,7 @@
 
 ## 🎯 Project Overview
 
-This repository implements a **complete, production-ready** biometric authentication system using EEG signals:
+This project implements a **complete, production-ready** biometric authentication system using EEG signals:
 
 ### **Core Features**
 - ✅ **Preprocessing**: Bandpass filtering, ICA artifact removal, downsampling, normalization
