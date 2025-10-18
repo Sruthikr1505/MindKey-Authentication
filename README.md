@@ -22,7 +22,7 @@ This project implements a **complete, production-ready** biometric authenticatio
 - **Calibration**: Platt scaling for probability calibration
 - **Explainability**: Captum-based attribution (Integrated Gradients, GradientShap)
 
-### **Production Features** 🚀
+### **Production Features** 
 - **Modern Web UI**: Beautiful React frontend with particle effects and gradients
 - **Security**: Rate limiting, input validation, SQL injection prevention, XSS protection
 - **Authentication Logging**: Complete audit trail of all enrollments and authentications
@@ -30,7 +30,7 @@ This project implements a **complete, production-ready** biometric authenticatio
 - **API Documentation**: Interactive Swagger UI and ReDoc
 - **Deployment**: FastAPI backend + React frontend + Docker support
 
-## 📊 Architecture
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -71,7 +71,7 @@ Authentication:
                                               Decision (Auth/Reject)
 ```
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### Prerequisites
 
