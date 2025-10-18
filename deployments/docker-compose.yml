@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ..
+      dockerfile: deployments/Dockerfile
+    container_name: eeg_auth_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../models:/app/models
+      - ../checkpoints:/app/checkpoints
+      - ../data:/app/data
+      - ../outputs:/app/outputs
+      - auth_db:/app/db
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MODEL_PATH=/app/checkpoints/best.ckpt
+      - PROTOTYPES_PATH=/app/models/prototypes.npz
+      - CALIBRATOR_PATH=/app/models/calibrator.pkl
+      - SPOOF_MODEL_PATH=/app/models/spoof_model.pth
+    restart: unless-stopped
+    networks:
+      - eeg_network
+
+  # Optional: PostgreSQL database (commented out, using SQLite by default)
+  # db:
+  #   image: postgres:14-alpine
+  #   container_name: eeg_auth_db
+  #   environment:
+  #     POSTGRES_USER: eeg_user
+  #     POSTGRES_PASSWORD: eeg_password
+  #     POSTGRES_DB: eeg_auth
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - eeg_network
+
+  # Optional: Frontend (if built separately)
+  # frontend:
+  #   build:
+  #     context: ../frontend
+  #     dockerfile: Dockerfile
+  #   container_name: eeg_auth_frontend
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - REACT_APP_API_URL=http://localhost:8000
+  #   depends_on:
+  #     - backend
+  #   networks:
+  #     - eeg_network
+
+volumes:
+  auth_db:
+  # postgres_data:
+
+networks:
+  eeg_network:
+    driver: bridge

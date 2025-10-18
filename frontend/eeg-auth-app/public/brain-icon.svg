@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
+  <defs>
+    <linearGradient id="brainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8b5cf6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6366f1;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <circle cx="50" cy="50" r="48" fill="#1a1a2e" stroke="url(#brainGradient)" stroke-width="2"/>
+  
+  <!-- Shield (Security) -->
+  <g filter="url(#glow)">
+    <path d="M50,20 L65,25 L65,40 Q65,52 50,60 Q35,52 35,40 L35,25 Z" 
+          fill="none" stroke="url(#brainGradient)" stroke-width="2" opacity="0.6"/>
+  </g>
+  
+  <!-- Brain Inside Shield -->
+  <g transform="translate(50, 42)" filter="url(#glow)">
+    <!-- Left Hemisphere -->
+    <path d="M-8,-12 Q-13,-12 -13,-7 Q-13,-2 -10,0 Q-7,2 -5,2 Q-3,2 -3,0 L-3,-4 Q-3,-9 -5,-12 Q-6,-13 -8,-12 Z" 
+          fill="url(#brainGradient)" opacity="0.9"/>
+    
+    <!-- Right Hemisphere -->
+    <path d="M8,-12 Q13,-12 13,-7 Q13,-2 10,0 Q7,2 5,2 Q3,2 3,0 L3,-4 Q3,-9 5,-12 Q6,-13 8,-12 Z" 
+          fill="url(#brainGradient)" opacity="0.9"/>
+    
+    <!-- Connection -->
+    <ellipse cx="0" cy="-4" rx="4" ry="1.5" fill="url(#brainGradient)" opacity="0.7"/>
+    
+    <!-- Neural Lines -->
+    <path d="M-8,-8 Q-5,-6 -3,-8" stroke="#8b5cf6" stroke-width="0.5" fill="none" opacity="0.6"/>
+    <path d="M8,-8 Q5,-6 3,-8" stroke="#8b5cf6" stroke-width="0.5" fill="none" opacity="0.6"/>
+  </g>
+  
+  <!-- Lock Symbol -->
+  <g transform="translate(50, 65)">
+    <rect x="-4" y="-2" width="8" height="6" rx="1" fill="url(#brainGradient)" opacity="0.8"/>
+    <path d="M-3,-2 L-3,-5 Q-3,-7 0,-7 Q3,-7 3,-5 L3,-2" 
+          stroke="url(#brainGradient)" stroke-width="1.5" fill="none" opacity="0.8"/>
+  </g>
+  
+  <!-- Pulse Effect -->
+  <circle cx="50" cy="50" r="35" fill="none" stroke="#8b5cf6" stroke-width="0.5" opacity="0.3">
+    <animate attributeName="r" from="35" to="45" dur="2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" from="0.3" to="0" dur="2s" repeatCount="indefinite"/>
+  </circle>
+</svg>
