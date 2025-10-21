@@ -9,7 +9,7 @@
 
 > **Brain-based biometric authentication using EEG signals, BiLSTM encoder with attention, and metric learning.**
 
-## 🎯 Project Overview
+##  Project Overview
 
 This project implements a **complete, production-ready** biometric authentication system using EEG signals:
 
