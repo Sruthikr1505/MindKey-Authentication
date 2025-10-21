@@ -1,14 +1,16 @@
-# Ignore everything by default
+# Ignore everything except what we explicitly include
 *
 
-# Include only the frontend files
-!/frontend/
-/frontend/*
-!/frontend/eeg-auth-app/
-/frontend/eeg-auth-app/**/*
+# Include the API file
+!/api/index.js
 
-# Exclude node_modules
-**/node_modules
+# Include the frontend app
+!/frontend/eeg-auth-app/
+/frontend/eeg-auth-app/**
+
+# Include necessary config files
+!/package.json
+!/vercel.json
 
 # Exclude Python files
 **/*.py
@@ -21,20 +23,7 @@ env/
 venv/
 ENV/
 
-# Exclude build artifacts
-build/
-dist/
-*.log
-
-# Include package files
-!package.json
-!package-lock.json
-!vercel.json
-
-# Include frontend files
-!frontend/eeg-auth-app/package.json
-!frontend/eeg-auth-app/package-lock.json
-!frontend/eeg-auth-app/src/**
-!frontend/eeg-auth-app/public/**
-!frontend/eeg-auth-app/index.html
-!frontend/eeg-auth-app/vite.config.js
+# Exclude development files
+.git
+.gitignore
+README.md

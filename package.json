@@ -4,14 +4,13 @@
   "private": true,
   "scripts": {
     "build": "cd frontend/eeg-auth-app && npm install && npm run build",
-    "vercel-build": "cd frontend/eeg-auth-app && npm install && npm run build",
     "start": "cd frontend/eeg-auth-app && npm run preview"
   },
   "engines": {
     "node": "20.x",
     "npm": "10.x"
   },
-  "workspaces": [
-    "frontend/eeg-auth-app"
-  ]
+  "dependencies": {
+    "@vercel/node": "^4.1.5"
+  }
 }
