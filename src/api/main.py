@@ -52,24 +52,36 @@ app = FastAPI(
     openapi_url="/openapi.json"
 )
 
-# Add CORS middleware (restrict origins in production)
+# Add CORS middleware with production and development origins
 ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:3000",
     "http://127.0.0.1:5173",
     "http://127.0.0.1:3000",
-    "http://localhost:8000",  # Allow Swagger UI
-    "http://127.0.0.1:8000",  # Allow Swagger UI
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
+    "https://eeg-auth-backend.onrender.com",
+    "https://eeg-auth.vercel.app",
+    "https://mindkey-authentication.vercel.app",
+    "https://mindkey-authentication-sruthikr1505.vercel.app"
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,  # Restricted to specific origins
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],  # Allow all headers for Swagger UI
+    allow_methods=["*"],
+    allow_headers=["*"],
     max_age=3600,
 )
+
+# Add request logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    logger.info(f"Incoming request: {request.method} {request.url}")
+    response = await call_next(request)
+    logger.info(f"Response status: {response.status_code}")
+    return response
 
 # Add rate limiting middleware
 app.middleware("http")(rate_limit_middleware)
@@ -114,25 +126,41 @@ class RegisterResponse(BaseModel):
 
 @app.on_event("startup")
 async def startup_event():
-    """Load models on startup."""
+    """Load models on startup with enhanced error handling and logging."""
     global MODEL, PROTOTYPES, CALIBRATOR, SPOOF_MODEL, SPOOF_THRESHOLD, USER_STORE, DEVICE
     
-    logger.info("Loading models...")
+    logger.info("=== Starting application initialization ===")
+    logger.info(f"Python version: {sys.version}")
+    logger.info(f"Current working directory: {os.getcwd()}")
+    logger.info(f"Files in root: {os.listdir('.')}")
     
-    # Create directories
-    os.makedirs(TEMP_DIR, exist_ok=True)
-    os.makedirs(EXPLANATIONS_DIR, exist_ok=True)
-    
-    # Initialize user store
-    USER_STORE = UserStore(DB_PATH)
-    
-    # Check if models exist
-    if not os.path.exists(MODEL_PATH):
-        logger.warning(f"Model not found at {MODEL_PATH}. Please train the model first.")
-        return
-    
-    # Load encoder model
     try:
+        # Create necessary directories
+        os.makedirs(TEMP_DIR, exist_ok=True)
+        os.makedirs(EXPLANATIONS_DIR, exist_ok=True)
+        logger.info(f"Created/validated directories: {TEMP_DIR}, {EXPLANATIONS_DIR}")
+        
+        # Initialize user store
+        USER_STORE = UserStore(DB_PATH)
+        logger.info(f"Initialized user store at {DB_PATH}")
+        
+        # Verify model files exist
+        required_files = {
+            'Model': MODEL_PATH,
+            'Prototypes': PROTOTYPES_PATH,
+            'Calibrator': CALIBRATOR_PATH,
+            'Spoof Model': SPOOF_MODEL_PATH
+        }
+        
+        for name, path in required_files.items():
+            exists = os.path.exists(path)
+            logger.info(f"{name} path: {path} - {'Found' if exists else 'NOT FOUND'}")
+            if not exists and name == 'Model':
+                logger.error(f"Required model file not found: {path}")
+                return
+        
+        # Load encoder model
+        logger.info("Loading BiLSTM encoder model...")
         MODEL = BiLSTMEncoder(
             n_channels=48,
             hidden_size=128,
@@ -141,45 +169,55 @@ async def startup_event():
             use_attention=True,
             num_classes=10
         )
-        checkpoint = torch.load(MODEL_PATH, map_location=DEVICE)
-        # Filter out metric_loss_fn keys if present
-        model_state = {k: v for k, v in checkpoint.items() if not k.startswith('metric_loss_fn.')}
-        MODEL.load_state_dict(model_state, strict=False)
-        MODEL.eval()
-        MODEL.to(DEVICE)
-        logger.info("Loaded encoder model")
-    except Exception as e:
-        logger.error(f"Error loading model: {e}")
-    
-    # Load prototypes
-    try:
-        if os.path.exists(PROTOTYPES_PATH):
-            PROTOTYPES = load_prototypes(PROTOTYPES_PATH)
-            logger.info(f"Loaded prototypes for {len(PROTOTYPES)} users")
-        else:
+        
+        try:
+            checkpoint = torch.load(MODEL_PATH, map_location=DEVICE)
+            model_state = {k: v for k, v in checkpoint.items() if not k.startswith('metric_loss_fn.')}
+            MODEL.load_state_dict(model_state, strict=False)
+            MODEL.eval()
+            MODEL.to(DEVICE)
+            logger.info("Successfully loaded encoder model")
+        except Exception as e:
+            logger.error(f"Failed to load model: {str(e)}", exc_info=True)
+            raise
+        
+        # Load prototypes
+        try:
+            if os.path.exists(PROTOTYPES_PATH):
+                PROTOTYPES = load_prototypes(PROTOTYPES_PATH)
+                logger.info(f"Loaded prototypes for {len(PROTOTYPES)} users")
+            else:
+                PROTOTYPES = {}
+                logger.warning("Prototypes file not found, starting with empty prototypes")
+        except Exception as e:
+            logger.error(f"Error loading prototypes: {str(e)}", exc_info=True)
             PROTOTYPES = {}
-            logger.warning("Prototypes file not found, starting with empty prototypes")
+        
+        # Load calibrator
+        try:
+            if os.path.exists(CALIBRATOR_PATH):
+                CALIBRATOR = load_calibrator(CALIBRATOR_PATH)
+                logger.info("Successfully loaded calibrator")
+            else:
+                logger.warning("Calibrator file not found, running without calibration")
+        except Exception as e:
+            logger.error(f"Error loading calibrator: {str(e)}", exc_info=True)
+        
+        # Load spoof detector
+        try:
+            if os.path.exists(SPOOF_MODEL_PATH):
+                SPOOF_MODEL, SPOOF_THRESHOLD = load_spoof_model(SPOOF_MODEL_PATH, DEVICE, weights_only=False)
+                logger.info(f"Loaded spoof detector with threshold: {SPOOF_THRESHOLD:.6f}")
+            else:
+                logger.warning("Spoof model not found, running without spoof detection")
+        except Exception as e:
+            logger.error(f"Error loading spoof detector: {str(e)}", exc_info=True)
+        
+        logger.info("=== Application startup completed successfully ===")
+        
     except Exception as e:
-        logger.error(f"Error loading prototypes: {e}")
-        PROTOTYPES = {}
-    
-    # Load calibrator
-    try:
-        if os.path.exists(CALIBRATOR_PATH):
-            CALIBRATOR = load_calibrator(CALIBRATOR_PATH)
-            logger.info("Loaded calibrator")
-    except Exception as e:
-        logger.error(f"Error loading calibrator: {e}")
-    
-    # Load spoof detector
-    try:
-        if os.path.exists(SPOOF_MODEL_PATH):
-            SPOOF_MODEL, SPOOF_THRESHOLD = load_spoof_model(SPOOF_MODEL_PATH, DEVICE, weights_only=False)
-            logger.info(f"Loaded spoof detector (threshold: {SPOOF_THRESHOLD:.6f})")
-    except Exception as e:
-        logger.error(f"Error loading spoof detector: {e}")
-    
-    logger.info("Startup complete")
+        logger.critical(f"Critical error during startup: {str(e)}", exc_info=True)
+        raise
 
 
 @app.get("/")
@@ -190,13 +228,73 @@ async def root():
 
 @app.get("/health")
 async def health():
-    """Health check endpoint."""
+    """
+    Health check endpoint with detailed system status.
+    
+    Returns:
+        dict: Detailed health status including model, memory, and system information
+    """
+    import psutil
+    import platform
+    
+    # Get system information
+    system_info = {
+        "system": platform.system(),
+        "node": platform.node(),
+        "release": platform.release(),
+        "version": platform.version(),
+        "machine": platform.machine(),
+        "processor": platform.processor(),
+        "python_version": platform.python_version(),
+    }
+    
+    # Get memory usage
+    process = psutil.Process()
+    memory_info = process.memory_info()
+    
+    # Get disk usage
+    disk_usage = psutil.disk_usage('/')
+    
     return {
         "status": "healthy",
-        "model_loaded": MODEL is not None,
-        "prototypes_loaded": PROTOTYPES is not None,
-        "calibrator_loaded": CALIBRATOR is not None,
-        "spoof_detector_loaded": SPOOF_MODEL is not None
+        "service": "eeg-auth-api",
+        "version": "1.0.0",
+        "models": {
+            "main_model_loaded": MODEL is not None,
+            "prototypes_loaded": PROTOTYPES is not None and len(PROTOTYPES) > 0,
+            "calibrator_loaded": CALIBRATOR is not None,
+            "spoof_detector_loaded": SPOOF_MODEL is not None,
+        },
+        "system": system_info,
+        "resources": {
+            "memory": {
+                "rss_mb": round(memory_info.rss / (1024 * 1024), 2),
+                "vms_mb": round(memory_info.vms / (1024 * 1024), 2),
+                "percent": process.memory_percent(),
+                "available_mb": round(psutil.virtual_memory().available / (1024 * 1024), 2),
+                "total_mb": round(psutil.virtual_memory().total / (1024 * 1024), 2)
+            },
+            "disk": {
+                "total_gb": round(disk_usage.total / (1024 ** 3), 2),
+                "used_gb": round(disk_usage.used / (1024 ** 3), 2),
+                "free_gb": round(disk_usage.free / (1024 ** 3), 2),
+                "percent": disk_usage.percent
+            },
+            "cpu": {
+                "cores": psutil.cpu_count(logical=False),
+                "threads": psutil.cpu_count(logical=True),
+                "usage_percent": psutil.cpu_percent(interval=1, percpu=False)
+            }
+        },
+        "timestamps": {
+            "current_utc": str(datetime.utcnow()),
+            "startup_time": str(process.create_time())
+        },
+        "endpoints": {
+            "docs": "/docs",
+            "redoc": "/redoc",
+            "openapi": "/openapi.json"
+        }
     }
 
 

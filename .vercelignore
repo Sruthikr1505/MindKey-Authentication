@@ -1,13 +1,40 @@
-# Ignore everything
-except these directories
-
-# Only include the frontend directory
-/frontend/eeg-auth-app/*
-!/frontend/eeg-auth-app/package.json
-!/frontend/eeg-auth-app/package-lock.json
-!/frontend/eeg-auth-app/vercel.json
-!/frontend/eeg-auth-app/src/**/*
-!/frontend/eeg-auth-app/public/**/*
-
-# Ignore all other files and directories
+# Ignore everything by default
 *
+
+# Include only the frontend files
+!/frontend/
+/frontend/*
+!/frontend/eeg-auth-app/
+/frontend/eeg-auth-app/**/*
+
+# Exclude node_modules
+**/node_modules
+
+# Exclude Python files
+**/*.py
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.pyd
+.Python
+env/
+venv/
+ENV/
+
+# Exclude build artifacts
+build/
+dist/
+*.log
+
+# Include package files
+!package.json
+!package-lock.json
+!vercel.json
+
+# Include frontend files
+!frontend/eeg-auth-app/package.json
+!frontend/eeg-auth-app/package-lock.json
+!frontend/eeg-auth-app/src/**
+!frontend/eeg-auth-app/public/**
+!frontend/eeg-auth-app/index.html
+!frontend/eeg-auth-app/vite.config.js

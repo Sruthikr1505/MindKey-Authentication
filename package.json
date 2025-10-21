@@ -1,5 +1,6 @@
 {
   "name": "mindkey-auth",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "build": "cd frontend/eeg-auth-app && npm install && npm run build",
@@ -7,8 +8,10 @@
     "start": "cd frontend/eeg-auth-app && npm run preview"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": "20.x",
+    "npm": "10.x"
   },
-  "dependencies": {},
-  "devDependencies": {}
+  "workspaces": [
+    "frontend/eeg-auth-app"
+  ]
 }

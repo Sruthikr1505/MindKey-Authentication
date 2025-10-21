@@ -5,20 +5,17 @@
       "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "frontend/eeg-auth-app/dist"
+        "distDir": "dist"
       }
     }
   ],
-  "build": {
-    "env": {
-      "NODE_VERSION": "20.x",
-      "VITE_API_URL": "https://eeg-auth-backend.onrender.com"
-    }
-  },
   "routes": [
     {
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ]
+  ],
+  "env": {
+    "VITE_API_URL": "https://eeg-auth-backend.onrender.com"
+  }
 }
