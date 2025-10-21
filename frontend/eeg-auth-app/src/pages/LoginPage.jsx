@@ -5,6 +5,7 @@ import { FaUser, FaLock, FaBrain, FaArrowLeft, FaHome, FaEye, FaEyeSlash } from 
 import { HiUpload } from 'react-icons/hi'
 import toast, { Toaster } from 'react-hot-toast'
 import axios from 'axios'
+import { API_BASE_URL } from '../config'
 import ParticleBackground from '../components/ParticleBackground'
 import ClickSpark from '../components/ClickSpark'
 const LoginPage = () => {
@@ -18,8 +19,6 @@ const LoginPage = () => {
   const [passwordError, setPasswordError] = useState('')
   const [dragActive, setDragActive] = useState(false)
   const navigate = useNavigate()
-
-  const API_URL = 'http://localhost:8000'
 
   // Validation functions
   const validateUsername = (value) => {
@@ -127,7 +126,7 @@ const LoginPage = () => {
         // Registration/Enrollment mode
         formData.append('enrollment_trials', eegFile)
         
-        const response = await axios.post(`${API_URL}/register`, formData)
+        const response = await axios.post(`${API_BASE_URL}/register`, formData)
         
         if (response.data.success) {
           toast.success('Enrollment successful! You can now sign in.')

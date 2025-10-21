@@ -4,14 +4,13 @@ import { useNavigate } from 'react-router-dom'
 import { FaCheckCircle, FaExclamationTriangle, FaBrain, FaShieldAlt, FaChartLine, FaSignOutAlt } from 'react-icons/fa'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts'
 import { Toaster } from 'react-hot-toast'
+import { API_BASE_URL } from '../config'
 import ExplainabilityPanel from '../components/ExplainabilityPanel'
 
 const Dashboard = () => {
   const [authResult, setAuthResult] = useState(null)
   const [showExplanation, setShowExplanation] = useState(false)
   const navigate = useNavigate()
-
-  const API_URL = 'http://localhost:8000'
 
   useEffect(() => {
     const result = localStorage.getItem('authResult')

@@ -4,8 +4,9 @@ import { FaBrain, FaChartBar, FaClock, FaInfoCircle, FaCheckCircle, FaTimesCircl
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from 'recharts'
 import axios from 'axios'
 import toast from 'react-hot-toast'
+import { API_BASE_URL } from '../config'
 
-const ExplainabilityPanel = ({ explainId, apiUrl = 'http://localhost:8000', authResult }) => {
+const ExplainabilityPanel = ({ explainId, apiUrl = API_BASE_URL, authResult }) => {
   const [loading, setLoading] = useState(true)
   const [heatmapImage, setHeatmapImage] = useState(null)
   const [topChannels, setTopChannels] = useState([])
