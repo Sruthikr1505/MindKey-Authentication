@@ -1,0 +1,13 @@
+# Ignore everything
+except these directories
+
+# Only include the frontend directory
+/frontend/eeg-auth-app/*
+!/frontend/eeg-auth-app/package.json
+!/frontend/eeg-auth-app/package-lock.json
+!/frontend/eeg-auth-app/vercel.json
+!/frontend/eeg-auth-app/src/**/*
+!/frontend/eeg-auth-app/public/**/*
+
+# Ignore all other files and directories
+*

@@ -1,0 +1,10 @@
+{
+  "name": "mindkey-auth",
+  "private": true,
+  "scripts": {
+    "build": "cd frontend/eeg-auth-app && npm install && npm run build"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
