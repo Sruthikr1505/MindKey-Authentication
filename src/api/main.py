@@ -6,6 +6,7 @@ import os
 import sys
 import uuid
 import logging
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 import numpy as np
@@ -234,68 +235,105 @@ async def health():
     Returns:
         dict: Detailed health status including model, memory, and system information
     """
-    import psutil
-    import platform
-    
-    # Get system information
-    system_info = {
-        "system": platform.system(),
-        "node": platform.node(),
-        "release": platform.release(),
-        "version": platform.version(),
-        "machine": platform.machine(),
-        "processor": platform.processor(),
-        "python_version": platform.python_version(),
-    }
-    
-    # Get memory usage
-    process = psutil.Process()
-    memory_info = process.memory_info()
-    
-    # Get disk usage
-    disk_usage = psutil.disk_usage('/')
-    
-    return {
-        "status": "healthy",
-        "service": "eeg-auth-api",
-        "version": "1.0.0",
-        "models": {
-            "main_model_loaded": MODEL is not None,
-            "prototypes_loaded": PROTOTYPES is not None and len(PROTOTYPES) > 0,
-            "calibrator_loaded": CALIBRATOR is not None,
-            "spoof_detector_loaded": SPOOF_MODEL is not None,
-        },
-        "system": system_info,
-        "resources": {
-            "memory": {
-                "rss_mb": round(memory_info.rss / (1024 * 1024), 2),
-                "vms_mb": round(memory_info.vms / (1024 * 1024), 2),
-                "percent": process.memory_percent(),
-                "available_mb": round(psutil.virtual_memory().available / (1024 * 1024), 2),
-                "total_mb": round(psutil.virtual_memory().total / (1024 * 1024), 2)
-            },
-            "disk": {
+    try:
+        import psutil
+        import platform
+        
+        # Get system information
+        system_info = {
+            "system": platform.system(),
+            "node": platform.node(),
+            "release": platform.release(),
+            "version": platform.version(),
+            "machine": platform.machine(),
+            "processor": platform.processor(),
+            "python_version": platform.python_version(),
+        }
+        
+        # Get process and system info
+        process = psutil.Process()
+        memory_info = process.memory_info()
+        
+        # Get disk usage (handle different OS paths)
+        disk_path = 'C:\\' if platform.system() == 'Windows' else '/'
+        try:
+            disk_usage = psutil.disk_usage(disk_path)
+            disk_info = {
                 "total_gb": round(disk_usage.total / (1024 ** 3), 2),
                 "used_gb": round(disk_usage.used / (1024 ** 3), 2),
                 "free_gb": round(disk_usage.free / (1024 ** 3), 2),
                 "percent": disk_usage.percent
-            },
-            "cpu": {
+            }
+        except Exception as e:
+            logger.warning(f"Could not get disk usage: {str(e)}")
+            disk_info = {"error": str(e)}
+        
+        # Get CPU info
+        try:
+            cpu_info = {
                 "cores": psutil.cpu_count(logical=False),
                 "threads": psutil.cpu_count(logical=True),
-                "usage_percent": psutil.cpu_percent(interval=1, percpu=False)
+                "usage_percent": psutil.cpu_percent(interval=0.1, percpu=False)
             }
-        },
-        "timestamps": {
-            "current_utc": str(datetime.utcnow()),
-            "startup_time": str(process.create_time())
-        },
-        "endpoints": {
-            "docs": "/docs",
-            "redoc": "/redoc",
-            "openapi": "/openapi.json"
+        except Exception as e:
+            logger.warning(f"Could not get CPU info: {str(e)}")
+            cpu_info = {"error": str(e)}
+        
+        # Get memory info
+        try:
+            virtual_mem = psutil.virtual_memory()
+            memory_info = {
+                "rss_mb": round(memory_info.rss / (1024 * 1024), 2),
+                "vms_mb": round(memory_info.vms / (1024 * 1024), 2),
+                "percent": process.memory_percent(),
+                "available_mb": round(virtual_mem.available / (1024 * 1024), 2),
+                "total_mb": round(virtual_mem.total / (1024 * 1024), 2)
+            }
+        except Exception as e:
+            logger.warning(f"Could not get memory info: {str(e)}")
+            memory_info = {"error": str(e)}
+        
+        return {
+            "status": "healthy",
+            "service": "eeg-auth-api",
+            "version": "1.0.0",
+            "models": {
+                "main_model_loaded": MODEL is not None,
+                "prototypes_loaded": PROTOTYPES is not None and len(PROTOTYPES) > 0,
+                "calibrator_loaded": CALIBRATOR is not None,
+                "spoof_detector_loaded": SPOOF_MODEL is not None,
+            },
+            "system": system_info,
+            "resources": {
+                "memory": memory_info,
+                "disk": disk_info,
+                "cpu": cpu_info
+            },
+            "timestamps": {
+                "current_utc": datetime.utcnow().isoformat(),
+                "startup_time": datetime.fromtimestamp(process.create_time()).isoformat()
+            },
+            "endpoints": {
+                "docs": "/docs",
+                "redoc": "/redoc",
+                "openapi": "/openapi.json"
+            }
         }
-    }
+        
+    except ImportError as e:
+        logger.error(f"Required package not found: {str(e)}")
+        return {
+            "status": "error",
+            "message": f"Required package not installed: {str(e)}",
+            "solution": "Run: pip install psutil"
+        }
+    except Exception as e:
+        logger.error(f"Health check failed: {str(e)}", exc_info=True)
+        return {
+            "status": "error",
+            "message": str(e),
+            "type": type(e).__name__
+        }
 
 
 @app.post("/register", response_model=RegisterResponse)

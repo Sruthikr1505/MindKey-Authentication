@@ -1,29 +1,28 @@
-# Ignore everything except what we explicitly include
+# Ignore everything except what we need
 *
+!frontend/
+!src/
+!package.json
+!vercel.json
+!requirements.txt
 
-# Include the API file
-!/api/index.js
+# Include frontend build files
+!frontend/eeg-auth-app/dist/
+!frontend/eeg-auth-app/dist/**
 
-# Include the frontend app
-!/frontend/eeg-auth-app/
-/frontend/eeg-auth-app/**
+# Include frontend public assets
+!frontend/eeg-auth-app/public/
+!frontend/eeg-auth-app/public/**
 
-# Include necessary config files
-!/package.json
-!/vercel.json
+# Include frontend source files
+!frontend/eeg-auth-app/src/
+!frontend/eeg-auth-app/**
 
-# Exclude Python files
-**/*.py
-**/__pycache__
-**/*.pyc
-**/*.pyo
-**/*.pyd
-.Python
-env/
-venv/
-ENV/
+# Include Python requirements
+!src/api/**
 
 # Exclude development files
 .git
 .gitignore
 README.md
+*.md
