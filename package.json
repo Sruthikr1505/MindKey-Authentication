@@ -2,6 +2,7 @@
   "name": "eeg-auth-fullstack",
   "version": "1.0.0",
   "scripts": {
+    "vercel-build": "cd frontend/eeg-auth-app && npm install && npm run build",
     "build": "cd frontend/eeg-auth-app && npm install && npm run build",
     "start": "cd frontend/eeg-auth-app && npm run preview"
   },

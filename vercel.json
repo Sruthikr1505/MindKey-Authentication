@@ -2,10 +2,10 @@
   "version": 2,
   "builds": [
     {
-      "src": "frontend/eeg-auth-app/package.json",
+      "src": "package.json",
       "use": "@vercel/static-build",
       "config": {
-        "distDir": "dist"
+        "distDir": "frontend/eeg-auth-app/dist"
       }
     },
     {
@@ -20,11 +20,11 @@
     },
     {
       "src": "/assets/(.*)",
-      "dest": "/frontend/eeg-auth-app/dist/assets/$1"
+      "dest": "frontend/eeg-auth-app/dist/assets/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "/frontend/eeg-auth-app/dist/index.html"
+      "dest": "frontend/eeg-auth-app/dist/index.html"
     }
   ]
 }
