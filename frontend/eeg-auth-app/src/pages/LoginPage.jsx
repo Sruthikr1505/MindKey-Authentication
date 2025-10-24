@@ -140,7 +140,7 @@ const LoginPage = () => {
         // Authentication mode
         formData.append('probe_trial', eegFile)
         
-        const response = await axios.post(`${API_URL}/auth/login`, formData)
+        const response = await axios.post(`${API_BASE_URL}/auth/login`, formData)
         
         if (response.data.authenticated) {
           toast.success('Authentication successful!')

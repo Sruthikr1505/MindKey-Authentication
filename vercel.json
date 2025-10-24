@@ -7,17 +7,15 @@
       "config": {
         "distDir": "frontend/eeg-auth-app/dist"
       }
-    },
+    }
+  ],
+  "rewrites": [
     {
-      "src": "src/api/main.py",
-      "use": "@vercel/python"
+      "source": "/api/:path*",
+      "destination": "https://eeg-auth-backend.onrender.com/api/:path*"
     }
   ],
   "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "src/api/main.py"
-    },
     {
       "src": "/assets/(.*)",
       "dest": "frontend/eeg-auth-app/dist/assets/$1"

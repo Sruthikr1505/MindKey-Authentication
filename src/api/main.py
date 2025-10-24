@@ -53,7 +53,7 @@ app = FastAPI(
     openapi_url="/openapi.json"
 )
 
-# Add CORS middleware with production and development origins
+# ============ FIXED: Updated CORS Configuration ============
 ALLOWED_ORIGINS = [
     "http://localhost:5173",
     "http://localhost:3000",
@@ -61,9 +61,11 @@ ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
+    "http://localhost:5000",
     "https://eeg-auth-backend.onrender.com",
     "https://eeg-auth.vercel.app",
     "https://mindkey-authentication.vercel.app",
+    "https://mindkey-authentication-za9n23.vercel.app",  # Your actual Vercel URL
     "https://mindkey-authentication-sruthikr1505.vercel.app"
 ]
 
@@ -80,6 +82,7 @@ app.add_middleware(
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     logger.info(f"Incoming request: {request.method} {request.url}")
+    logger.info(f"Origin: {request.headers.get('origin', 'No origin header')}")
     response = await call_next(request)
     logger.info(f"Response status: {response.status_code}")
     return response
@@ -224,7 +227,11 @@ async def startup_event():
 @app.get("/")
 async def root():
     """Root endpoint."""
-    return {"message": "EEG Authentication API", "status": "running"}
+    return {
+        "message": "EEG Authentication API",
+        "status": "running",
+        "version": "1.0.0"
+    }
 
 
 @app.get("/health")
