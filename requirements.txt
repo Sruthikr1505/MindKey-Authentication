@@ -58,3 +58,4 @@ onnxruntime>=1.15.0       # Run ONNX models cross-platform
 # Optional (requires API key)
 # ===============================
 # wandb==0.15.8            # Experiment tracking and logging
+psutil>=5.8.0
