@@ -6,72 +6,246 @@ import axios from 'axios'
 import toast from 'react-hot-toast'
 import { API_BASE_URL } from '../config'
 
-const ExplainabilityPanel = ({ explainId, apiUrl = API_BASE_URL, authResult }) => {
-  const [loading, setLoading] = useState(true)
-  const [heatmapImage, setHeatmapImage] = useState(null)
-  const [topChannels, setTopChannels] = useState([])
-  const [topTimeWindows, setTopTimeWindows] = useState([])
-  const [activeTab, setActiveTab] = useState('decision')
-  const [error, setError] = useState(null)
+const ExplainabilityPanel = ({ explainId, apiUrl = API_BASE_URL, authResult, isAuthenticated = false, confidenceScore = 0, spoofScore = 0 }) => {
+  const [loading, setLoading] = useState(true);
+  const [heatmapImage, setHeatmapImage] = useState(null);
+  const [topChannels, setTopChannels] = useState([]);
+  const [topTimeWindows, setTopTimeWindows] = useState([]);
+  const [activeTab, setActiveTab] = useState('decision');
+  const [error, setError] = useState(null);
+  const [decision, setDecision] = useState({
+    isAuthenticated: false,
+    confidence: 0,
+    isSpoof: false,
+    spoofScore: 0,
+    explanation: '',
+    keyFactors: []
+  });
 
   useEffect(() => {
-    if (explainId) {
-      fetchExplanation()
-    } else {
-      // If no explainId, show fallback data immediately
-      setLoading(false)
-      setError('No explanation ID available')
-      loadFallbackData()
-    }
+    let isMounted = true;
+    
+    const loadData = async () => {
+      if (!isMounted) return;
+      
+      try {
+        if (explainId) {
+          await fetchExplanation();
+        } else {
+          // If no explainId, show fallback data immediately
+          console.log('No explanation ID provided, using fallback data');
+          if (isMounted) {
+            setLoading(false);
+            setError('No explanation ID available');
+            loadFallbackData();
+          }
+        }
+      } catch (error) {
+        console.error('Error in useEffect:', error);
+        if (isMounted) {
+          setError('Failed to load explanation');
+          loadFallbackData();
+          setLoading(false);
+        }
+      }
+    };
+    
+    loadData();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [explainId])
 
+  // Helper function to generate explanation text
+  const generateExplanation = (isAuth, confidence, isSpoof, spoofScore) => {
+    if (isSpoof) {
+      return `The model detected potential spoofing activity (score: ${(spoofScore * 100).toFixed(1)}%). ` +
+             `This suggests the authentication attempt may not be from a legitimate user.`;
+    }
+    
+    if (isAuth) {
+      return `The model is ${(confidence * 100).toFixed(1)}% confident this is a legitimate user. ` +
+             `The brainwave patterns match the expected user's profile within acceptable thresholds.`;
+    } else {
+      return `The model is ${((1 - confidence) * 100).toFixed(1)}% confident this is not the claimed identity. ` +
+             `The brainwave patterns do not match the expected user's profile.`;
+    }
+  };
+
+  // Helper function to generate key factors
+  const generateKeyFactors = (data, isAuth, isSpoof) => {
+    const factors = [];
+    
+    if (isSpoof) {
+      factors.push('High likelihood of spoofing attempt detected');
+      factors.push('Unusual signal patterns inconsistent with live brain activity');
+      if (data.spoof_reason) {
+        factors.push(`Spoofing indicators: ${data.spoof_reason}`);
+      }
+    } else if (isAuth) {
+      factors.push('Strong match with enrolled brainwave patterns');
+      factors.push('Consistent neural response across key regions');
+      factors.push('Stable signal quality throughout authentication');
+    } else {
+      factors.push('Significant deviation from enrolled patterns');
+      factors.push('Inconsistent neural response in key regions');
+      factors.push('Potential mismatch in cognitive processing style');
+    }
+    
+    return factors;
+  };
+
   const loadFallbackData = () => {
+    // Set default decision for fallback
+    setDecision({
+      isAuthenticated: false,
+      confidence: 0.0,
+      isSpoof: false,
+      spoofScore: 0.0,
+      explanation: 'Using fallback data - No explanation available',
+      keyFactors: [
+        'Sample data - No real authentication performed',
+        'This is a demonstration of the explanation interface'
+      ]
+    });
+
     setTopChannels([
       { name: 'Fp1', importance: 0.92, region: 'Frontal' },
       { name: 'F3', importance: 0.87, region: 'Frontal' },
       { name: 'C3', importance: 0.81, region: 'Central' },
       { name: 'P3', importance: 0.76, region: 'Parietal' },
       { name: 'O1', importance: 0.68, region: 'Occipital' },
-    ])
+    ]);
     
     setTopTimeWindows([
       { window: '0.0-0.5s', importance: 0.89, description: 'Initial response' },
       { window: '0.5-1.0s', importance: 0.84, description: 'Processing phase' },
       { window: '1.0-1.5s', importance: 0.72, description: 'Sustained activity' },
       { window: '1.5-2.0s', importance: 0.65, description: 'Late response' },
-    ])
+    ]);
   }
+
+  const processExplanationData = (data) => {
+    try {
+      if (!data) {
+        console.warn('No data provided to processExplanationData');
+        loadFallbackData();
+        return;
+      }
+
+      console.log('Processing explanation data:', data);
+      
+      // Determine authentication status from the most reliable source
+      const authStatus = isAuthenticated !== undefined ? isAuthenticated : 
+                       (data.is_authenticated !== undefined ? data.is_authenticated : 
+                       (authResult?.is_authenticated || false));
+      
+      // Get confidence score from the most reliable source
+      const confidence = confidenceScore !== undefined ? confidenceScore : 
+                        (data.confidence_score || data.confidence || 0);
+      
+      // Check for spoofing - consider it a spoof if spoofScore > 0.5
+      const isSpoof = (spoofScore > 0.5) || 
+                     data.is_spoof || 
+                     data.spoof_detected || 
+                     false;
+      
+      const spoofScoreValue = spoofScore || data.spoof_score || 0;
+      
+      // Final authentication decision - not authenticated if it's a spoof
+      const finalAuthStatus = authStatus && !isSpoof;
+      
+      // Update decision state
+      setDecision({
+        isAuthenticated: finalAuthStatus,
+        confidence: Math.min(100, Math.max(0, Math.round(confidence * 100))), // Ensure between 0-100
+        isSpoof,
+        spoofScore: Math.min(100, Math.max(0, Math.round(spoofScoreValue * 100))), // Ensure between 0-100
+        explanation: data.explanation || generateExplanation(finalAuthStatus, confidence, isSpoof, spoofScoreValue),
+        keyFactors: data.key_factors || generateKeyFactors(data, finalAuthStatus, isSpoof)
+      });
+      
+      // Process visualization data
+      if (data.heatmap_url && typeof data.heatmap_url === 'string') {
+        setHeatmapImage(data.heatmap_url);
+      } else if (data.heatmap) {
+        setHeatmapImage(data.heatmap);
+      }
+      
+      if (Array.isArray(data.top_channels) && data.top_channels.length > 0) {
+        setTopChannels(data.top_channels);
+      } else if (data.channels) {
+        setTopChannels(Array.isArray(data.channels) ? data.channels : []);
+      }
+      
+      if (Array.isArray(data.top_time_windows) && data.top_time_windows.length > 0) {
+        setTopTimeWindows(data.top_time_windows);
+      } else if (data.time_windows) {
+        setTopTimeWindows(Array.isArray(data.time_windows) ? data.time_windows : []);
+      }
+    } catch (error) {
+      console.error('Error processing explanation data:', error);
+      setError('Error processing explanation data');
+      loadFallbackData();
+    }
+  };
 
   const fetchExplanation = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
+      setError(null);
       
-      // Check if explainId exists
       if (!explainId) {
-        console.warn('No explanation ID provided')
-        setLoading(false)
-        return
+        console.warn('No explanation ID provided');
+        setError('No explanation data available');
+        loadFallbackData();
+        return;
       }
 
-      // The API returns an image file, so we set the heatmap URL directly
-      const heatmapUrl = `${apiUrl}/explain/${explainId}`
-      setHeatmapImage(heatmapUrl)
-      
-      // Load fallback data (since API only returns image)
-      loadFallbackData()
+      // Check if we have authResult with the explanation data
+      try {
+        if (authResult?.explanation) {
+          console.log('Using explanation data from authResult');
+          processExplanationData(authResult.explanation);
+          return;
+        }
 
-      setLoading(false)
-      toast.success('Model explanation loaded!')
-      
-    } catch (error) {
-      console.error('Error fetching explanation:', error)
-      setError(error.message)
-      
-      // Show fallback data instead of error
-      loadFallbackData()
-      
-      setLoading(false)
-      toast.info('Showing simulated explanation data')
+        // Otherwise, fetch from API
+        console.log(`Fetching explanation from API with ID: ${explainId}`);
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Authentication required');
+        }
+
+        const response = await axios.get(`${apiUrl}/explain/${explainId}`, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          timeout: 10000 // 10 second timeout
+        });
+
+        if (response?.data) {
+          console.log('Received explanation data:', response.data);
+          processExplanationData(response.data);
+          toast.success('Model explanation loaded!');
+        } else {
+          console.warn('Empty response from server');
+          throw new Error('No data received from server');
+        }
+      } catch (apiError) {
+        console.warn('Error fetching explanation, using fallback data:', apiError);
+        setError(apiError.message || 'Failed to load explanation');
+        loadFallbackData();
+        toast.info('Showing simulated explanation data');
+      }
+    } catch (err) {
+      console.error('Unexpected error in fetchExplanation:', err);
+      setError('An unexpected error occurred');
+      loadFallbackData();
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -96,23 +270,79 @@ const ExplainabilityPanel = ({ explainId, apiUrl = API_BASE_URL, authResult }) =
   if (loading) {
     return (
       <div className="glass p-8 rounded-3xl">
-        <div className="flex items-center justify-center">
+        <div className="flex flex-col items-center justify-center space-y-4">
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-            className="w-12 h-12 border-4 border-violet-500 border-t-transparent rounded-full"
+            className="w-16 h-16 border-4 border-violet-500 border-t-transparent rounded-full"
           />
+          <p className="text-gray-400 text-center">Analyzing brainwave patterns...</p>
+          <p className="text-sm text-gray-500">This may take a few moments</p>
         </div>
       </div>
     )
   }
 
+  // Render decision badge
+  const renderDecisionBadge = () => {
+    if (decision.isSpoof) {
+      return (
+        <div className="bg-red-500/10 border border-red-500/30 text-red-400 px-4 py-2 rounded-xl flex items-center">
+          <FaTimesCircle className="mr-2" />
+          <span className="font-bold">Spoofing Detected</span>
+        </div>
+      );
+    }
+    
+    return decision.isAuthenticated ? (
+      <div className="bg-green-500/10 border border-green-500/30 text-green-400 px-4 py-2 rounded-xl flex items-center">
+        <FaCheckCircle className="mr-2" />
+        <span className="font-bold">Authenticated</span>
+        <span className="ml-2 text-sm">(Confidence: {(decision.confidence * 100).toFixed(1)}%)</span>
+      </div>
+    ) : (
+      <div className="bg-orange-500/10 border border-orange-500/30 text-orange-400 px-4 py-2 rounded-xl flex items-center">
+        <FaTimesCircle className="mr-2" />
+        <span className="font-bold">Not Authenticated</span>
+        <span className="ml-2 text-sm">(Confidence: {((1 - decision.confidence) * 100).toFixed(1)}%)</span>
+      </div>
+    );
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="glass p-8 rounded-3xl"
+      className="glass p-8 rounded-3xl space-y-6"
     >
+      {/* Decision Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-white">Authentication Decision</h2>
+          <p className="text-gray-400">Analysis of brainwave patterns</p>
+        </div>
+        {renderDecisionBadge()}
+      </div>
+
+      {/* Explanation Card */}
+      <div className="bg-white/5 border border-white/10 rounded-xl p-5">
+        <h3 className="text-lg font-semibold text-white mb-3 flex items-center">
+          <FaInfoCircle className="mr-2 text-violet-400" />
+          Explanation
+        </h3>
+        <p className="text-gray-300">{decision.explanation}</p>
+        
+        {decision.keyFactors && decision.keyFactors.length > 0 && (
+          <div className="mt-4">
+            <h4 className="font-medium text-gray-300 mb-2">Key Factors:</h4>
+            <ul className="list-disc list-inside space-y-1 text-gray-400">
+              {decision.keyFactors.map((factor, index) => (
+                <li key={index} className="text-sm">{factor}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <FaBrain className="w-8 h-8 text-violet-500" />
@@ -124,12 +354,22 @@ const ExplainabilityPanel = ({ explainId, apiUrl = API_BASE_URL, authResult }) =
 
       {/* Error Display */}
       {error && (
-        <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4 mb-6">
-          <div className="flex items-start gap-3">
-            <FaInfoCircle className="w-5 h-5 text-orange-400 mt-0.5" />
-            <div className="text-sm text-gray-300">
-              <p className="font-semibold mb-1 text-orange-400">Note:</p>
-              <p>Showing simulated explanation data. {error}</p>
+        <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-6">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <FaTimesCircle className="h-5 w-5 text-red-400" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-700">{error}</p>
+              <div className="mt-2">
+                <button
+                  type="button"
+                  onClick={fetchExplanation}
+                  className="text-sm font-medium text-red-700 hover:text-red-600"
+                >
+                  Try again <span aria-hidden="true">&rarr;</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

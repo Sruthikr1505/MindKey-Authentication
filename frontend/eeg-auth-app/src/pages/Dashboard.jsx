@@ -347,8 +347,11 @@ const Dashboard = () => {
           ) : (
             <ExplainabilityPanel 
               explainId={authResult.explain_id}
-              apiUrl={API_URL}
+              apiUrl={API_BASE_URL}
               authResult={authResult}
+              isAuthenticated={isLikelyGenuine}
+              confidenceScore={authResult.score}
+              spoofScore={authResult.spoof_score || 0}
             />
           )}
         </motion.div>
