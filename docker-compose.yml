@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  eeg-auth-app:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+      - ./logs:/app/logs
+      - ./explanations:/app/explanations
+      - ./auth_logs.db:/app/auth_logs.db
+    environment:
+      - PYTHONPATH=/app
+      - MODEL_PATH=/app/models/bilstm_encoder.pth
+      - PROTOTYPES_PATH=/app/data/prototypes.pkl
+      - CALIBRATOR_PATH=/app/models/calibrator.pkl
+      - SPOOF_MODEL_PATH=/app/models/spoof_detector.pth
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  default:
+    name: eeg-auth-network

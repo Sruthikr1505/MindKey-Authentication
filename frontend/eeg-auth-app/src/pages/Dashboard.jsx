@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { FaCheckCircle, FaExclamationTriangle, FaBrain, FaShieldAlt, FaChartLine, FaSignOutAlt } from 'react-icons/fa'
+import { FaCheckCircle, FaExclamationTriangle, FaBrain, FaShieldAlt, FaChartLine, FaSignOutAlt, FaUserShield, FaHome, FaCog } from 'react-icons/fa'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts'
 import { Toaster } from 'react-hot-toast'
 import { API_BASE_URL } from '../config'
@@ -24,6 +24,15 @@ const Dashboard = () => {
   const handleLogout = () => {
     localStorage.removeItem('authResult')
     navigate('/login')
+  }
+
+  const handleAdminDashboard = () => {
+    // Navigate to integrated admin dashboard
+    navigate('/admin')
+  }
+
+  const handleHome = () => {
+    navigate('/')
   }
 
   if (!authResult) return null
@@ -90,6 +99,74 @@ const Dashboard = () => {
           Sign Out
         </motion.button>
       </motion.div>
+
+      {/* Navigation Bar */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="glass p-4 rounded-2xl mb-8 backdrop-blur-lg border border-white/20"
+      >
+        <div className="flex items-center justify-center gap-4">
+          <motion.button
+            whileHover={{ scale: 1.05, y: -2 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleHome}
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition-all shadow-lg"
+          >
+            <FaHome className="w-5 h-5" />
+            Home
+          </motion.button>
+
+          <motion.button
+            whileHover={{ scale: 1.05, y: -2 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleAdminDashboard}
+            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 rounded-xl font-semibold hover:from-purple-700 hover:to-purple-800 transition-all shadow-lg"
+          >
+            <FaUserShield className="w-5 h-5" />
+            Admin Dashboard
+          </motion.button>
+
+          <div className="flex items-center gap-2 px-4 py-2 bg-white/10 rounded-xl">
+            <FaBrain className="w-4 h-4 text-purple-400" />
+            <span className="text-sm text-gray-300">
+              Status: <span className={`font-semibold ${authResult.authenticated ? 'text-green-400' : 'text-red-400'}`}>
+                {authResult.authenticated ? 'Authenticated' : 'Rejected'}
+              </span>
+            </span>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Impostor Alert - Special notification for rejected users */}
+      {!authResult.authenticated && (
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.15 }}
+          className="glass p-6 rounded-2xl mb-6 border-2 border-orange-500 bg-gradient-to-r from-orange-500/20 to-red-500/20"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <FaExclamationTriangle className="w-8 h-8 text-orange-400" />
+              <div>
+                <h3 className="text-xl font-bold text-orange-400">Authentication Rejected</h3>
+                <p className="text-gray-300">View detailed analysis of why authentication failed</p>
+              </div>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleAdminDashboard}
+              className="flex items-center gap-2 px-4 py-2 bg-orange-600 rounded-lg font-semibold hover:bg-orange-700 transition-colors"
+            >
+              <FaUserShield className="w-4 h-4" />
+              View Analysis
+            </motion.button>
+          </div>
+        </motion.div>
+      )}
 
       {/* Status Card */}
       <motion.div
@@ -276,6 +353,25 @@ const Dashboard = () => {
           )}
         </motion.div>
       )}
+
+      {/* Floating Admin Access Button - Always visible for quick access */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ delay: 1, type: "spring", stiffness: 200 }}
+        className="fixed bottom-8 right-8 z-50"
+      >
+        <motion.button
+          whileHover={{ scale: 1.1, rotate: 5 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={handleAdminDashboard}
+          className="flex items-center gap-2 px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full font-bold text-white shadow-2xl hover:shadow-purple-500/50 transition-all"
+          title="Open Admin Dashboard for detailed analysis"
+        >
+          <FaUserShield className="w-6 h-6" />
+          <span className="hidden sm:inline">Admin Panel</span>
+        </motion.button>
+      </motion.div>
       </div>
     </div>
   )

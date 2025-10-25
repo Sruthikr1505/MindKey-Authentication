@@ -1,0 +1,7 @@
+{
+  "same_user_different_trials": [],
+  "different_users_same_trial": [],
+  "different_users_different_trials": [],
+  "high_confidence_genuine": [],
+  "high_confidence_impostor": []
+}

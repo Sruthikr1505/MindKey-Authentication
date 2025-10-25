@@ -128,6 +128,10 @@ def main():
                        help='Path to model checkpoint')
     parser.add_argument('--prototypes', type=str, default='models/prototypes.npz',
                        help='Path to prototypes file')
+    parser.add_argument('--calibrator', type=str, default='models/calibrator.pkl',
+                       help='Path to calibrator file')
+    parser.add_argument('--spoof_model', type=str, default='models/spoof_model.pth',
+                       help='Path to spoof detector model')
     parser.add_argument('--subjects', type=int, nargs='+', default=list(range(1, 11)),
                        help='Subject IDs to evaluate')
     parser.add_argument('--batch_size', type=int, default=64,

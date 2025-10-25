@@ -166,7 +166,7 @@ async def startup_event():
         # Load encoder model
         logger.info("Loading BiLSTM encoder model...")
         MODEL = BiLSTMEncoder(
-            n_channels=48,
+            n_channels=32,
             hidden_size=128,
             num_layers=2,
             embedding_size=128,
@@ -347,15 +347,15 @@ async def health():
 async def register(
     username: str = Form(...),
     password: str = Form(...),
-    enrollment_trials: list[UploadFile] = File(...)
+    enrollment_trials: UploadFile = File(...)
 ):
     """
-    Register a new user with enrollment trials.
+    Register a new user with enrollment trial.
     
     Args:
         username: Username
         password: Password
-        enrollment_trials: List of .npy files containing EEG trials
+        enrollment_trials: Single .npy file containing EEG trial
     
     Returns:
         Registration response
@@ -380,45 +380,47 @@ async def register(
         if USER_STORE.get_user(username) is not None:
             raise HTTPException(status_code=400, detail="User already exists")
         
-        # Load and preprocess enrollment trials
+        # Load and preprocess enrollment trial
         trial_embeddings = []
         
-        for trial_file in enrollment_trials:
-            # Validate file
-            file_size = 0
+        # Process single enrollment trial
+        trial_file = enrollment_trials
+        
+        # Validate file
+        file_size = 0
+        content = await trial_file.read()
+        file_size = len(content)
+        await trial_file.seek(0)  # Reset file pointer
+        
+        is_valid, error_msg = security.validate_file_upload(trial_file.filename, file_size)
+        if not is_valid:
+            raise HTTPException(status_code=400, detail=error_msg)
+        
+        # Sanitize filename
+        safe_filename = security.sanitize_filename(trial_file.filename)
+        
+        # Save uploaded file
+        temp_path = os.path.join(TEMP_DIR, f"{uuid.uuid4()}.npy")
+        with open(temp_path, 'wb') as f:
             content = await trial_file.read()
-            file_size = len(content)
-            await trial_file.seek(0)  # Reset file pointer
-            
-            is_valid, error_msg = security.validate_file_upload(trial_file.filename, file_size)
-            if not is_valid:
-                raise HTTPException(status_code=400, detail=error_msg)
-            
-            # Sanitize filename
-            safe_filename = security.sanitize_filename(trial_file.filename)
-            
-            # Save uploaded file
-            temp_path = os.path.join(TEMP_DIR, f"{uuid.uuid4()}.npy")
-            with open(temp_path, 'wb') as f:
-                content = await trial_file.read()
-                f.write(content)
-            
-            # Load trial
-            trial_data = np.load(temp_path)
-            
-            # Preprocess if needed (assume already preprocessed)
-            # trial_data shape: (n_channels, n_samples)
-            
-            # Convert to tensor and get embedding
-            trial_tensor = torch.FloatTensor(trial_data).unsqueeze(0).to(DEVICE)
-            
-            with torch.no_grad():
-                embedding = MODEL(trial_tensor).cpu().numpy()
-            
-            trial_embeddings.append(embedding[0])
-            
-            # Cleanup
-            os.remove(temp_path)
+            f.write(content)
+        
+        # Load trial
+        trial_data = np.load(temp_path)
+        
+        # Preprocess if needed (assume already preprocessed)
+        # trial_data shape: (n_channels, n_samples)
+        
+        # Convert to tensor and get embedding
+        trial_tensor = torch.FloatTensor(trial_data).unsqueeze(0).to(DEVICE)
+        
+        with torch.no_grad():
+            embedding = MODEL(trial_tensor).cpu().numpy()
+        
+        trial_embeddings.append(embedding[0])
+        
+        # Cleanup
+        os.remove(temp_path)
         
         trial_embeddings = np.array(trial_embeddings)
         logger.info(f"Computed {len(trial_embeddings)} embeddings for {username}")
@@ -551,7 +553,17 @@ async def authenticate(
         # Compute calibrated probability
         calibrated_prob = 0.5
         if CALIBRATOR is not None:
-            calibrated_prob = float(apply_calibration(CALIBRATOR, np.array([score]))[0])
+            try:
+                calibrated_prob = float(apply_calibration(CALIBRATOR, np.array([score]))[0])
+                # Check for NaN and replace with score-based probability
+                if np.isnan(calibrated_prob) or np.isinf(calibrated_prob):
+                    calibrated_prob = float(score)  # Use raw score as fallback
+            except Exception as e:
+                logger.warning(f"Calibration failed: {e}, using raw score")
+                calibrated_prob = float(score)
+        else:
+            # Use raw score when no calibrator is available
+            calibrated_prob = float(score)
         
         # Compute spoof score
         spoof_score = 0.0
@@ -638,7 +650,7 @@ async def get_explanation(explain_id: str):
             checkpoint_path=MODEL_PATH,
             trial_path=trial_path,
             methods=['integrated_gradients'],
-            n_channels=48,
+            n_channels=32,
             device=DEVICE,
             output_dir=EXPLANATIONS_DIR
         )
@@ -651,6 +663,99 @@ async def get_explanation(explain_id: str):
     except Exception as e:
         logger.error(f"Explanation error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# Admin Dashboard Endpoints
+@app.get("/admin/auth-stats")
+async def get_auth_stats():
+    """Get authentication statistics for admin dashboard"""
+    try:
+        # Get authentication logs from the last 24 hours
+        logs = AUTH_LOGGER.get_recent_logs(hours=24)
+        
+        # Calculate statistics
+        total_attempts = len(logs)
+        successful_logins = len([log for log in logs if log.get('authenticated', False)])
+        failed_attempts = total_attempts - successful_logins
+        success_rate = (successful_logins / total_attempts * 100) if total_attempts > 0 else 0
+        
+        # Get unique users count
+        unique_users = len(set(log.get('username', 'unknown') for log in logs if log.get('username')))
+        
+        return {
+            "totalUsers": unique_users,
+            "successfulLogins": successful_logins,
+            "failedAttempts": failed_attempts,
+            "successRate": round(success_rate, 2)
+        }
+    except Exception as e:
+        logger.error(f"Error getting auth stats: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get authentication statistics")
+
+
+@app.get("/admin/recent-activity")
+async def get_recent_activity():
+    """Get recent authentication activity for admin dashboard"""
+    try:
+        # Get recent logs (last 50 entries)
+        logs = AUTH_LOGGER.get_recent_logs(limit=50)
+        
+        activity = []
+        for log in logs:
+            activity.append({
+                "user": log.get('username', 'Unknown'),
+                "action": "Authentication Attempt",
+                "success": log.get('authenticated', False),
+                "timestamp": log.get('timestamp', datetime.now().isoformat()),
+                "confidence": log.get('confidence_level', 'UNKNOWN'),
+                "similarity_score": log.get('similarity_score', 0)
+            })
+        
+        return activity
+    except Exception as e:
+        logger.error(f"Error getting recent activity: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get recent activity")
+
+
+@app.get("/admin/chart-data")
+async def get_chart_data():
+    """Get chart data for admin dashboard"""
+    try:
+        # Get authentication logs from the last 7 days
+        logs = AUTH_LOGGER.get_recent_logs(hours=24*7)
+        
+        # Group by day and calculate success rates
+        from collections import defaultdict
+        daily_stats = defaultdict(lambda: {'total': 0, 'success': 0})
+        
+        for log in logs:
+            # Extract date from timestamp
+            timestamp = log.get('timestamp', '')
+            if timestamp:
+                try:
+                    date = datetime.fromisoformat(timestamp.replace('Z', '+00:00')).date()
+                    date_str = date.strftime('%Y-%m-%d')
+                    daily_stats[date_str]['total'] += 1
+                    if log.get('authenticated', False):
+                        daily_stats[date_str]['success'] += 1
+                except:
+                    continue
+        
+        # Convert to chart format
+        chart_data = []
+        for date, stats in sorted(daily_stats.items()):
+            success_rate = (stats['success'] / stats['total'] * 100) if stats['total'] > 0 else 0
+            chart_data.append({
+                "name": date,
+                "value": round(success_rate, 1),
+                "total": stats['total'],
+                "success": stats['success']
+            })
+        
+        return chart_data
+    except Exception as e:
+        logger.error(f"Error getting chart data: {e}")
+        return []  # Return empty array on error
 
 
 if __name__ == "__main__":

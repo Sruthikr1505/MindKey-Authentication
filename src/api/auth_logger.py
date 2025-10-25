@@ -183,6 +183,52 @@ class AuthLogger:
         
         return rows
     
+    def get_recent_logs(self, hours=24, limit=None):
+        """Get recent authentication logs for admin dashboard."""
+        conn = sqlite3.connect(self.db_path)
+        cursor = conn.cursor()
+        
+        query = '''
+            SELECT 
+                username,
+                auth_file,
+                score,
+                calibrated_prob,
+                spoof_score,
+                is_spoof,
+                authenticated,
+                timestamp,
+                message
+            FROM authentication_logs 
+            WHERE datetime(timestamp) >= datetime('now', '-{} hours')
+            ORDER BY timestamp DESC
+        '''.format(hours)
+        
+        if limit:
+            query += f' LIMIT {limit}'
+        
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        conn.close()
+        
+        # Convert to list of dictionaries
+        logs = []
+        for row in rows:
+            logs.append({
+                'username': row[0],
+                'auth_file': row[1],
+                'similarity_score': row[2],
+                'calibrated_probability': row[3],
+                'spoof_score': row[4],
+                'is_spoof': row[5],
+                'authenticated': row[6],
+                'timestamp': row[7],
+                'message': row[8],
+                'confidence_level': 'HIGH' if row[3] > 0.8 else 'MEDIUM' if row[3] > 0.5 else 'LOW'
+            })
+        
+        return logs
+    
     def get_user_stats(self, username):
         """Get statistics for a specific user."""
         conn = sqlite3.connect(self.db_path)

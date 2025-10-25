@@ -2,7 +2,7 @@
 // Use relative URLs for Vercel proxy in production, direct URL for local dev
 export const API_BASE_URL = import.meta.env.VITE_API_URL !== undefined 
   ? import.meta.env.VITE_API_URL 
-  : "";
+  : "http://localhost:8000";
 
 // Other configuration constants can be added here
 export const APP_NAME = "EEG Authentication System";

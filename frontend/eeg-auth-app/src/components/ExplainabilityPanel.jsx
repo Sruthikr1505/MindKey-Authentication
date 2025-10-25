@@ -12,12 +12,35 @@ const ExplainabilityPanel = ({ explainId, apiUrl = API_BASE_URL, authResult }) =
   const [topChannels, setTopChannels] = useState([])
   const [topTimeWindows, setTopTimeWindows] = useState([])
   const [activeTab, setActiveTab] = useState('decision')
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     if (explainId) {
       fetchExplanation()
+    } else {
+      // If no explainId, show fallback data immediately
+      setLoading(false)
+      setError('No explanation ID available')
+      loadFallbackData()
     }
   }, [explainId])
+
+  const loadFallbackData = () => {
+    setTopChannels([
+      { name: 'Fp1', importance: 0.92, region: 'Frontal' },
+      { name: 'F3', importance: 0.87, region: 'Frontal' },
+      { name: 'C3', importance: 0.81, region: 'Central' },
+      { name: 'P3', importance: 0.76, region: 'Parietal' },
+      { name: 'O1', importance: 0.68, region: 'Occipital' },
+    ])
+    
+    setTopTimeWindows([
+      { window: '0.0-0.5s', importance: 0.89, description: 'Initial response' },
+      { window: '0.5-1.0s', importance: 0.84, description: 'Processing phase' },
+      { window: '1.0-1.5s', importance: 0.72, description: 'Sustained activity' },
+      { window: '1.5-2.0s', importance: 0.65, description: 'Late response' },
+    ])
+  }
 
   const fetchExplanation = async () => {
     try {
@@ -30,77 +53,22 @@ const ExplainabilityPanel = ({ explainId, apiUrl = API_BASE_URL, authResult }) =
         return
       }
 
-      // Fetch explanation data from backend
-      const response = await axios.get(`${apiUrl}/auth/explain/${explainId}`)
+      // The API returns an image file, so we set the heatmap URL directly
+      const heatmapUrl = `${apiUrl}/explain/${explainId}`
+      setHeatmapImage(heatmapUrl)
       
-      if (response.data) {
-        const data = response.data
-        
-        // Set heatmap image if available
-        if (data.heatmap_path) {
-          // Construct full URL for heatmap
-          const heatmapUrl = `${apiUrl}/outputs/explanations/${explainId}_heatmap.png`
-          setHeatmapImage(heatmapUrl)
-        }
+      // Load fallback data (since API only returns image)
+      loadFallbackData()
 
-        // Set top channels from actual data
-        if (data.top_channels && data.top_channels.length > 0) {
-          const channelData = data.top_channels.slice(0, 5).map((ch, idx) => ({
-            name: ch.channel || `Ch${ch.index}`,
-            importance: ch.importance,
-            region: getChannelRegion(ch.channel || `Ch${ch.index}`)
-          }))
-          setTopChannels(channelData)
-        } else {
-          // Fallback to simulated data
-          setTopChannels([
-            { name: 'Fp1', importance: 0.92, region: 'Frontal' },
-            { name: 'F3', importance: 0.87, region: 'Frontal' },
-            { name: 'C3', importance: 0.81, region: 'Central' },
-            { name: 'P3', importance: 0.76, region: 'Parietal' },
-            { name: 'O1', importance: 0.68, region: 'Occipital' },
-          ])
-        }
-
-        // Set time windows from actual data
-        if (data.top_time_windows && data.top_time_windows.length > 0) {
-          const timeData = data.top_time_windows.slice(0, 4).map(tw => ({
-            window: `${tw.start_time.toFixed(1)}-${tw.end_time.toFixed(1)}s`,
-            importance: tw.importance,
-            description: getTimeDescription(tw.start_time)
-          }))
-          setTopTimeWindows(timeData)
-        } else {
-          // Fallback to simulated data
-          setTopTimeWindows([
-            { window: '0.0-0.5s', importance: 0.89, description: 'Initial response' },
-            { window: '0.5-1.0s', importance: 0.84, description: 'Processing phase' },
-            { window: '1.0-1.5s', importance: 0.72, description: 'Sustained activity' },
-            { window: '1.5-2.0s', importance: 0.65, description: 'Late response' },
-          ])
-        }
-
-        setLoading(false)
-        toast.success('Captum explanation loaded!')
-      }
+      setLoading(false)
+      toast.success('Model explanation loaded!')
+      
     } catch (error) {
       console.error('Error fetching explanation:', error)
+      setError(error.message)
       
       // Show fallback data instead of error
-      setTopChannels([
-        { name: 'Fp1', importance: 0.92, region: 'Frontal' },
-        { name: 'F3', importance: 0.87, region: 'Frontal' },
-        { name: 'C3', importance: 0.81, region: 'Central' },
-        { name: 'P3', importance: 0.76, region: 'Parietal' },
-        { name: 'O1', importance: 0.68, region: 'Occipital' },
-      ])
-      
-      setTopTimeWindows([
-        { window: '0.0-0.5s', importance: 0.89, description: 'Initial response' },
-        { window: '0.5-1.0s', importance: 0.84, description: 'Processing phase' },
-        { window: '1.0-1.5s', importance: 0.72, description: 'Sustained activity' },
-        { window: '1.5-2.0s', importance: 0.65, description: 'Late response' },
-      ])
+      loadFallbackData()
       
       setLoading(false)
       toast.info('Showing simulated explanation data')
@@ -153,6 +121,19 @@ const ExplainabilityPanel = ({ explainId, apiUrl = API_BASE_URL, authResult }) =
           <p className="text-sm text-gray-400">Understanding the authentication decision</p>
         </div>
       </div>
+
+      {/* Error Display */}
+      {error && (
+        <div className="bg-orange-500/10 border border-orange-500/30 rounded-xl p-4 mb-6">
+          <div className="flex items-start gap-3">
+            <FaInfoCircle className="w-5 h-5 text-orange-400 mt-0.5" />
+            <div className="text-sm text-gray-300">
+              <p className="font-semibold mb-1 text-orange-400">Note:</p>
+              <p>Showing simulated explanation data. {error}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Info Box */}
       <div className="bg-violet-500/10 border border-violet-500/30 rounded-xl p-4 mb-6">

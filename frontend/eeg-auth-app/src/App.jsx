@@ -3,6 +3,7 @@ import ErrorBoundary from './components/ErrorBoundary'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import Dashboard from './pages/Dashboard'
+import AdminDashboard from './pages/AdminDashboard'
 import AccessDenied from './pages/AccessDenied'
 import NotFoundPage from './pages/NotFoundPage'
 
@@ -14,6 +15,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/access-denied" element={<AccessDenied />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
