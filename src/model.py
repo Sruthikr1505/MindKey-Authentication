@@ -18,7 +18,7 @@ class BiLSTMEncoder(pl.LightningModule):
     
     def __init__(
         self,
-        n_channels: int = 48,
+        n_channels: int = 32,
         hidden_size: int = 128,
         num_layers: int = 2,
         embedding_size: int = 128,
