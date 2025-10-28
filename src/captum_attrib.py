@@ -201,7 +201,7 @@ def main():
     
     # Generate explanations
     results = explain_trial(
-        checkpoint_path=args.checkpoint,
+        checkpoint_path=args.checkpoint,cd 
         trial_path=args.trial,
         methods=args.methods,
         n_channels=args.n_channels,
