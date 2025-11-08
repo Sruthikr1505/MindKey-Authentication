@@ -721,7 +721,7 @@ pip install tabulate
 
 ---
 
-## 🎯 Key Features Summary
+##  Key Features Summary
 
 | Feature | Status | Description |
 |---------|--------|-------------|
